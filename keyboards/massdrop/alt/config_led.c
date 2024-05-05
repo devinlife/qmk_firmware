@@ -60,3 +60,27 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 #endif // USB_LED_INDICATOR_ENABLE
 
 #endif
+
+void keyboard_post_init_user(void) {
+  gcr_desired = LED_GCR_DEFAULT;
+}
+
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    for (uint8_t i = led_min; i < led_max; i++) {
+        switch(get_highest_layer(layer_state|default_layer_state)) {
+            case 0:
+            case 1:
+            case 2:
+                rgb_matrix_set_color(i, RGB_BLUE);
+                break;
+            case 3:
+            case 4:
+            case 5:
+                rgb_matrix_set_color(i, RGB_RED);
+                break;
+            default:
+                break;
+        }
+    }
+    return false;
+}
