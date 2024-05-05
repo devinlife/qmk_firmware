@@ -3,6 +3,8 @@
 enum alt_keycodes {
     L_BRI = SAFE_RANGE,    //LED Brightness Increase
     L_BRD,                 //LED Brightness Decrease
+    CST_DDW,              //CUSTOM: delete a line in Windows
+    CST_DDM,              //CUSTOM: delete a line in MacOS
     U_T_AUTO,              // USB Extra Port Toggle Auto Detect / Always Active
     U_T_AGCR,              // USB Toggle Automatic GCR control
     DBG_TOG,               // DEBUG Toggle On / Off
@@ -23,7 +25,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [1] = LAYOUT_65_ansi_blocker(
         KC_GRV,  KC_F1,   KC_F2,        KC_F3,   KC_F4,   KC_F5,   KC_F6,         KC_F7,   KC_F8,   KC_F9,          KC_F10,  KC_F11,  KC_F12,  KC_CAPS, KC_SCRL,
-        _______, KC_GRV,  LSFT(KC_GRV), _______, _______, _______, LCTL(KC_BSPC), KC_BSPC, KC_HOME, LCTL(KC_LEFT),  KC_HOME, _______, KC_PAUS, KC_W,    KC_INSERT,
+        _______, KC_GRV,  LSFT(KC_GRV), _______, _______, CST_DDW, LCTL(KC_BSPC), KC_BSPC, KC_HOME, LCTL(KC_LEFT),  KC_HOME, _______, KC_PAUS, KC_W,    KC_INSERT,
         _______, KC_WBAK, KC_WFWD,      KC_PGUP, KC_PGDN, _______, KC_LEFT,       KC_DOWN, KC_UP,   KC_RIGHT,       _______, _______,          _______, KC_NUM_LOCK,
         _______, _______, _______,      _______, _______, _______, KC_APP,        KC_DEL,  KC_END,  LCTL(KC_RIGHT), KC_END,  _______,          KC_VOLU, MO(2),
         _______, _______, _______,                                                  _______,                        _______, _______, _______, KC_VOLD, _______
@@ -45,7 +47,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [4] = LAYOUT_65_ansi_blocker(
         KC_GRV,  KC_F1,         KC_F2,          KC_F3,   KC_F4,   KC_F5,   KC_F6,         KC_F7,   KC_F8,          KC_F9,          KC_F10,  KC_F11,  KC_F12,  LSFT(KC_CAPS), KC_SCRL,
-        _______, KC_GRV,        LSFT(KC_GRV),   _______, _______, _______, LGUI(KC_BSPC), KC_BSPC, LALT(KC_LEFT),  LGUI(KC_LEFT),  KC_HOME, _______, KC_PAUS, KC_M,          KC_INSERT,
+        _______, KC_GRV,        LSFT(KC_GRV),   _______, _______, CST_DDM, LGUI(KC_BSPC), KC_BSPC, LALT(KC_LEFT),  LGUI(KC_LEFT),  KC_HOME, _______, KC_PAUS, KC_M,          KC_INSERT,
         _______, LALT(KC_LBRC), LALT(KC_RBRC),  KC_PGUP, KC_PGDN, _______, KC_LEFT,       KC_DOWN, KC_UP,          KC_RIGHT,       _______, _______,          _______,       KC_NUM_LOCK,
         _______, _______,       _______,        _______, _______, _______, _______,       KC_DEL,  LALT(KC_RIGHT), LGUI(KC_RIGHT), KC_END,  _______,          KC_VOLU,       MO(5),
         _______, _______,       _______,                                                  _______,                                 _______, _______, _______, KC_VOLD,       _______
@@ -76,6 +78,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     static uint32_t key_timer;
 
     switch (keycode) {
+        case CST_DDM:
+            if (record->event.pressed) {
+                SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_LEFT) SS_UP(X_LALT));
+                SEND_STRING(SS_DOWN(X_LSFT) SS_DOWN(X_LALT) SS_TAP(X_RIGHT) SS_UP(X_LALT) SS_UP(X_LSFT));
+                SEND_STRING(SS_TAP(X_BSPC));
+            }
+            return false;
+        case CST_DDW:
+            if (record->event.pressed) {
+                SEND_STRING(SS_TAP(X_HOME));
+                SEND_STRING(SS_DOWN(X_LSFT) SS_TAP(X_END) SS_UP(X_LSFT));
+                SEND_STRING(SS_TAP(X_BSPC));
+            }
+            return false;
         case L_BRI:
             if (record->event.pressed) {
                 if ((gcr_desired + LED_GCR_STEP) > LED_GCR_MAX) {

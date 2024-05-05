@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define LED_GCR_STEP                4           //GCR increment/decrement value
 #define LED_GCR_DEFAULT             8           //GCR default valeu
 
+#define RGB_MATRIX_TIMEOUT 60000
+
 #ifdef USE_MASSDROP_CONFIGURATOR
 #define ANIMATION_SPEED_STEP        1
 
