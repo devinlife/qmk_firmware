@@ -1,5 +1,10 @@
 #include QMK_KEYBOARD_H
 
+#define SPAM_DELAY 2000  // 500 milliseconds between spams
+bool spam_active = false;
+uint32_t spam_timer = 0;
+
+
 enum alt_keycodes {
     L_BRI = SAFE_RANGE,    //LED Brightness Increase
     L_BRD,                 //LED Brightness Decrease
@@ -7,6 +12,7 @@ enum alt_keycodes {
     MV_MAC,              //CUSTOM: move mac machine
     CST_DDW,              //CUSTOM: delete a line in Windows
     CST_DDM,              //CUSTOM: delete a line in MacOS
+    SPAM,              //CUSTOM: delete a line in MacOS
     U_T_AUTO,              // USB Extra Port Toggle Auto Detect / Always Active
     U_T_AGCR,              // USB Toggle Automatic GCR control
     DBG_TOG,               // DEBUG Toggle On / Off
@@ -20,7 +26,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Windows Layout
     [0] = LAYOUT_65_ansi_blocker(
         KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
-        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, _______,
+        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
         MO(1),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  _______,
         KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   _______,
         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             KC_F13 , MO(2),   KC_LEFT, KC_DOWN, KC_RGHT
@@ -42,7 +48,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Mac Layout
     [3] = LAYOUT_65_ansi_blocker(
         KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
-        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, _______,
+        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
         MO(4),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  _______,
         KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   _______,
         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             KC_F13 , MO(5),   KC_LEFT, KC_DOWN, KC_RGHT
@@ -124,6 +130,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             return false;
+         case SPAM:  // When you press custom SPAM keycode
+            if (record->event.pressed) {
+                spam_active = !spam_active; // Toggle spamming
+                if(spam_active) {
+                    spam_timer = timer_read32(); // Reset spam timer
+                    SEND_STRING("spam: start");
+                } else {
+                    SEND_STRING("spam: end");
+                }
+            }
+            return false;
         case U_T_AUTO:
             if (record->event.pressed && MODS_SHIFT && MODS_CTRL) {
                 TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
@@ -192,4 +209,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         default:
             return true; //Process all other keycodes normally
     }
+}
+
+void matrix_scan_user(void){
+  if (spam_active) {
+    // Check if it's been SPAM_DELAY milliseconds since the last spam
+    if (timer_elapsed32(spam_timer) > SPAM_DELAY) {
+      tap_code(KC_COMMA);           // Send a comma
+      tap_code(KC_COMMA);           // Send a comma
+      tap_code(KC_BACKSPACE);           // Send a comma
+      tap_code(KC_BACKSPACE);           // Send a comma
+      spam_timer = timer_read32();  // Reset spam timer
+    }
+  }
 }
