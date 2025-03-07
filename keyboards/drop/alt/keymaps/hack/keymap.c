@@ -1,7 +1,16 @@
 #include QMK_KEYBOARD_H
 
 #define LED_GCR_STEP                4           //GCR increment/decrement value
-#define LED_GCR_MAX                 165         //Max GCR value (0 - 255) WARNING: Raising this value may overload the LED drivers and USB bus
+#define LED_GCR_MAX 165                         // Max GCR value (0 - 255) WARNING: Raising this value may overload the LED drivers and USB bus
+
+
+// #define RGB_MATRIX_ENABLE
+#define RGBLIGHT_ENABLE
+// #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255  // 최대 밝기 설정
+#define LIGHT_TIMEOUT 3000                     // Time in milliseconds before the light turns off
+
+uint32_t light_timer = 0;
+
 
 #define SPAM_DELAY 2000  // 500 milliseconds between spams
 bool spam_active = false;
@@ -88,7 +97,28 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 void keyboard_pre_init_user(void) {
     // Call the pre init code.
     // Set the init layer to 3
+    // layer_move(3);
+}
+
+void set_mac_mode(void) {
     layer_move(3);
+    rgb_matrix_enable();
+    rgb_matrix_sethsv(0, 255, 255);
+    light_timer = timer_read();  // 현재 시간 저장
+}
+
+void set_window_mode(void) {
+    layer_move(3);
+    rgb_matrix_enable();
+    rgb_matrix_sethsv(170, 255, 255);
+    light_timer = timer_read();  // 현재 시간 저장
+}
+
+
+void keyboard_post_init_user(void) {
+    rgb_matrix_enable();
+    rgb_matrix_mode_noeeprom(1); // 기본 단색 모드
+    set_mac_mode();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -98,13 +128,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case MV_WIN:
             if (record->event.pressed) {
                 SEND_STRING(SS_TAP(X_F14));
-                layer_move(0);
+                set_window_mode();
             }
             return false;
         case MV_MAC:
             if (record->event.pressed) {
                 SEND_STRING(SS_TAP(X_F15));
-                layer_move(3);
+                set_mac_mode();
             }
             return false;
         case CST_DDM:
@@ -231,4 +261,9 @@ void matrix_scan_user(void){
       spam_timer = timer_read32();  // Reset spam timer
     }
   }
+
+  if (timer_elapsed(light_timer) > LIGHT_TIMEOUT) {
+    rgblight_disable();  // 라이트 끄기
+  }
 }
+
