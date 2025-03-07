@@ -18,20 +18,11 @@ uint32_t spam_timer = 0;
 
 
 enum alt_keycodes {
-    L_BRI = SAFE_RANGE,    //LED Brightness Increase
-    L_BRD,                 //LED Brightness Decrease
-    MV_WIN,              //CUSTOM: move window machine
+    MV_WIN = SAFE_RANGE,   //CUSTOM: move window machine
     MV_MAC,              //CUSTOM: move mac machine
     CST_DDW,              //CUSTOM: delete a line in Windows
     CST_DDM,              //CUSTOM: delete a line in MacOS
     SPAM,              //CUSTOM: delete a line in MacOS
-    U_T_AUTO,              // USB Extra Port Toggle Auto Detect / Always Active
-    U_T_AGCR,              // USB Toggle Automatic GCR control
-    DBG_TOG,               // DEBUG Toggle On / Off
-    DBG_MTRX,              // DEBUG Toggle Matrix Prints
-    DBG_KBD,               // DEBUG Toggle Keyboard Prints
-    DBG_MOU,               // DEBUG Toggle Mouse Prints
-    MD_BOOT,               // Restart into bootloader after hold timeout
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -54,8 +45,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, LCTL(KC_F13), LCTL(KC_F14),     LCTL(KC_F15),     _______,            _______, KC_PSCR, RSG(KC_S), _______, _______, _______, _______, _______, _______, _______,
         _______, _______,      _______,          _______,          LSFT(KC_F4),        _______, _______, _______,   _______, _______, _______, _______, _______, _______, _______,
         KC_F14,  LSA(KC_E),    LSA(KC_F),        LCTL(LSFT(KC_G)), LGUI(LSFT(KC_F12)), _______, _______, _______,   _______, _______, _______, _______,          _______, _______,
-        _______, _______,      LCTL(LSFT(KC_B)), _______,          KC_F4,              _______, _______, _______,   _______, _______, _______, _______,          L_BRI,   _______,
-        _______, _______,      _______,                                                _______,                              _______, _______, _______, L_BRD,   _______
+        _______, _______,      LCTL(LSFT(KC_B)), _______,          KC_F4,              _______, _______, _______,   _______, _______, _______, _______,          _______, _______,
+        _______, _______,      _______,                                                _______,                              _______, _______, _______, _______, _______
     ),
     // Mac Layout
     [3] = LAYOUT_65_ansi_blocker(
@@ -76,8 +67,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, LCTL(KC_F13), LCTL(KC_F14),     LCTL(KC_F15),     _______,            _______, LSA(KC_3), LSA(KC_4), _______, _______, _______, _______, _______, _______, _______,
         _______, _______,      _______,          _______,          LSFT(KC_F4),        _______, _______,   _______,   _______, _______, _______, _______, _______, _______, _______,
         KC_F14,  LSA(KC_E),    LSA(KC_F),        LCTL(LSFT(KC_G)), LGUI(LSFT(KC_F12)), _______, _______,   _______,   _______, _______, _______, _______,          _______, _______,
-        _______, _______,      LCTL(LSFT(KC_B)), _______,          KC_F4,              _______, _______,   _______,   _______, _______, _______, _______,          L_BRI,   _______,
-        _______, _______,      _______,                                                _______,                                         _______, _______, _______, L_BRD,   _______
+        _______, _______,      LCTL(LSFT(KC_B)), _______,          KC_F4,              _______, _______,   _______,   _______, _______, _______, _______,          _______, _______,
+        _______, _______,      _______,                                                _______,                                         _______, _______, _______, _______,   _______
     ),
     /*
     [X] = LAYOUT(
@@ -94,24 +85,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL) || get_mods() & MOD_BIT(KC_RCTL))
 #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
 
-void keyboard_pre_init_user(void) {
-    // Call the pre init code.
-    // Set the init layer to 3
-    // layer_move(3);
-}
-
 void set_mac_mode(void) {
     layer_move(3);
     rgb_matrix_enable();
-    rgb_matrix_sethsv(0, 255, 255);
-    light_timer = timer_read();  // 현재 시간 저장
+    rgb_matrix_sethsv(0, 255, 255);  // set color to red
+    light_timer = timer_read();
 }
 
 void set_window_mode(void) {
     layer_move(3);
     rgb_matrix_enable();
-    rgb_matrix_sethsv(170, 255, 255);
-    light_timer = timer_read();  // 현재 시간 저장
+    rgb_matrix_sethsv(170, 255, 255);  // set color to blue
+    light_timer = timer_read();
 }
 
 
@@ -122,8 +107,6 @@ void keyboard_post_init_user(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    static uint32_t key_timer;
-
     switch (keycode) {
         case MV_WIN:
             if (record->event.pressed) {
@@ -151,24 +134,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 SEND_STRING(SS_TAP(X_BSPC));
             }
             return false;
-        case L_BRI:
-            if (record->event.pressed) {
-                // if ((gcr_desired + LED_GCR_STEP) > LED_GCR_MAX) {
-                //     gcr_desired = LED_GCR_MAX;
-                // } else {
-                //     gcr_desired += LED_GCR_STEP;
-                // }
-            }
-            return false;
-        case L_BRD:
-            if (record->event.pressed) {
-                // if ((gcr_desired - LED_GCR_STEP) < 0) {
-                //     gcr_desired = 0;
-                // } else {
-                //     gcr_desired -= LED_GCR_STEP;
-                // }
-            }
-            return false;
          case SPAM:  // When you press custom SPAM keycode
             if (record->event.pressed) {
                 spam_active = !spam_active; // Toggle spamming
@@ -178,71 +143,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else {
                     SEND_STRING("spam: end");
                 }
-            }
-            return false;
-        case U_T_AUTO:
-            // if (record->event.pressed && MODS_SHIFT && MODS_CTRL) {
-            //     TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
-            // }
-            return false;
-        case U_T_AGCR:
-            // if (record->event.pressed && MODS_SHIFT && MODS_CTRL) {
-            //     TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
-            // }
-            return false;
-        case DBG_TOG:
-            // if (record->event.pressed) {
-            //     TOGGLE_FLAG_AND_PRINT(debug_enable, "Debug mode");
-            // }
-            return false;
-        case DBG_MTRX:
-            // if (record->event.pressed) {
-            //     TOGGLE_FLAG_AND_PRINT(debug_matrix, "Debug matrix");
-            // }
-            return false;
-        case DBG_KBD:
-            // if (record->event.pressed) {
-            //     TOGGLE_FLAG_AND_PRINT(debug_keyboard, "Debug keyboard");
-            // }
-            return false;
-        case DBG_MOU:
-            // if (record->event.pressed) {
-            //     TOGGLE_FLAG_AND_PRINT(debug_mouse, "Debug mouse");
-            // }
-            return false;
-        case MD_BOOT:
-            if (record->event.pressed) {
-                key_timer = timer_read32();
-            } else {
-                if (timer_elapsed32(key_timer) >= 500) {
-                    reset_keyboard();
-                }
-            }
-            return false;
-        case RGB_TOG:
-            if (record->event.pressed) {
-              switch (rgb_matrix_get_flags()) {
-                case LED_FLAG_ALL: {
-                    rgb_matrix_set_flags(LED_FLAG_KEYLIGHT | LED_FLAG_MODIFIER | LED_FLAG_INDICATOR);
-                    rgb_matrix_set_color_all(0, 0, 0);
-                  }
-                  break;
-                case (LED_FLAG_KEYLIGHT | LED_FLAG_MODIFIER | LED_FLAG_INDICATOR): {
-                    rgb_matrix_set_flags(LED_FLAG_UNDERGLOW);
-                    rgb_matrix_set_color_all(0, 0, 0);
-                  }
-                  break;
-                case LED_FLAG_UNDERGLOW: {
-                    rgb_matrix_set_flags(LED_FLAG_NONE);
-                    rgb_matrix_disable_noeeprom();
-                  }
-                  break;
-                default: {
-                    rgb_matrix_set_flags(LED_FLAG_ALL);
-                    rgb_matrix_enable_noeeprom();
-                  }
-                  break;
-              }
             }
             return false;
         default:
