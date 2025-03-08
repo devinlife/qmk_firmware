@@ -9,30 +9,37 @@
 // #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255  // 최대 밝기 설정
 #define LIGHT_TIMEOUT 3000                     // Time in milliseconds before the light turns off
 
+bool light_active  = false;
 uint32_t light_timer = 0;
-
 
 #define SPAM_DELAY 60000 // 1 second between spams
 bool spam_active = false;
 uint32_t spam_timer = 0;
 
+uint32_t os_custom_code = 0;
 
 enum alt_keycodes {
-    MV_WIN = SAFE_RANGE,   //CUSTOM: move window machine
-    MV_MAC,              //CUSTOM: move mac machine
-    CST_DDW,              //CUSTOM: delete a line in Windows
-    CST_DDM,              //CUSTOM: delete a line in MacOS
-    SPAM,              //CUSTOM: delete a line in MacOS
+    MV_WIN = SAFE_RANGE, // CUSTOM: move window machine
+    MV_MAC,              // CUSTOM: move mac machine
+    CST_DDW,             // CUSTOM: delete a line in Windows
+    CST_DDM,             // CUSTOM: delete a line in MacOS
+    CHG_LANG,            // CUSTOM: change language
+    SPAM,                // CUSTOM: delete a line in MacOS
+};
+
+enum os_layers {
+    MAC_LAYER = 0,
+    WINDOWS_LAYER = 3
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Windows Layout
     [0] = LAYOUT_65_ansi_blocker(
-        KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
-        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
-        MO(1),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  _______,
-        KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   _______,
-        KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             KC_F13 , MO(2),   KC_LEFT, KC_DOWN, KC_RGHT
+        KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,     KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
+        KC_TAB,  KC_W,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,     KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
+        MO(1),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,  KC_QUOT,          KC_ENT,  _______,
+        KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,          KC_UP,   _______,
+        KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             CHG_LANG, MO(2),   KC_LEFT, KC_DOWN, KC_RGHT
     ),
     [1] = LAYOUT_65_ansi_blocker(
         KC_GRV,  KC_F1,   KC_F2,        KC_F3,   KC_F4,   KC_F5,   KC_F6,         KC_F7,   KC_F8,   KC_F9,          KC_F10,  KC_F11,  KC_F12,  KC_CAPS, KC_SCRL,
@@ -50,11 +57,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     // Mac Layout
     [3] = LAYOUT_65_ansi_blocker(
-        KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
-        KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
-        MO(4),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  _______,
-        KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   _______,
-        KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             KC_F13 , MO(5),   KC_LEFT, KC_DOWN, KC_RGHT
+        KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,     KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
+        KC_TAB,  KC_M,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,     KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
+        MO(4),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,  KC_QUOT,          KC_ENT,  _______,
+        KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,          KC_UP,   _______,
+        KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             CHG_LANG, MO(5),   KC_LEFT, KC_DOWN, KC_RGHT
     ),
     [4] = LAYOUT_65_ansi_blocker(
         KC_GRV,  KC_F1,         KC_F2,          KC_F3,   KC_F4,   KC_F5,   KC_F6,         KC_F7,   KC_F8,          KC_F9,          KC_F10,  KC_F11,  KC_F12,  LSFT(KC_CAPS), KC_SCRL,
@@ -86,19 +93,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
 
 void set_mac_mode(void) {
-    layer_move(3);
+    layer_move(WINDOWS_LAYER);
     rgb_matrix_enable();
-    rgb_matrix_sethsv(0, 255, 255);  // set color to red
+    rgb_matrix_sethsv(0, 255, 255); // set color to red
+    light_active = true;
     light_timer = timer_read();
 }
 
 void set_window_mode(void) {
-    layer_move(3);
+    layer_move(MAC_LAYER);
     rgb_matrix_enable();
     rgb_matrix_sethsv(170, 255, 255);  // set color to blue
+    light_active = true;
     light_timer = timer_read();
 }
-
 
 void keyboard_post_init_user(void) {
     rgb_matrix_enable();
@@ -108,6 +116,17 @@ void keyboard_post_init_user(void) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
+        case CHG_LANG:
+            if (record->event.pressed) {
+                if (os_custom_code == OS_LINUX) { // for android
+                    register_code(KC_LSFT);
+                    tap_code(KC_SPC);
+                    unregister_code(KC_LSFT);
+                } else {
+                    tap_code(KC_F13); //for mac and windows
+                }
+            }
+            return false;
         case MV_WIN:
             if (record->event.pressed) {
                 SEND_STRING(SS_TAP(X_F14));
@@ -150,25 +169,52 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
-void check_spam_active(void){
-  if (spam_active) {
+void check_and_send_spam(void){
     // Check if it's been SPAM_DELAY milliseconds since the last spam
     if (timer_elapsed32(spam_timer) > SPAM_DELAY) {
-      tap_code(KC_COMMA);           // Send a comma
-      spam_timer = timer_read32();  // Reset spam timer
+        tap_code(KC_COMMA);           // Send a comma
+        spam_timer = timer_read32();  // Reset spam timer
     }
-  }
+}
 
+void disable_light_if_timeout(void){
   if (timer_elapsed(light_timer) > LIGHT_TIMEOUT) {
     rgblight_disable();  // 라이트 끄기
+    light_active = false;
   }
 }
 
 void matrix_scan_user(void) {
-  check_spam_active();
+  if (spam_active) {
+    check_and_send_spam();
+  }
 
-  if (timer_elapsed(light_timer) > LIGHT_TIMEOUT) {
-    rgblight_disable();  // 라이트 끄기
+  if (light_active) {
+    disable_light_if_timeout();
   }
 }
 
+bool process_detected_host_os_kb(os_variant_t detected_os) {
+    if (!process_detected_host_os_user(detected_os)) {
+        os_custom_code = OS_UNSURE;
+        return false;
+    }
+    switch (detected_os) {
+        case OS_MACOS:
+        case OS_IOS:
+            os_custom_code = OS_MACOS;
+            break;
+        case OS_WINDOWS:
+            os_custom_code = OS_WINDOWS;
+            break;
+        case OS_LINUX:
+            os_custom_code = OS_LINUX;  //for android
+            set_window_mode();
+            break;
+        case OS_UNSURE:
+            os_custom_code = OS_UNSURE;
+            break;
+    }
+
+    return true;
+}
