@@ -129,28 +129,46 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MV_WIN:
             if (record->event.pressed) {
-                SEND_STRING(SS_TAP(X_F14));
+                tap_code(KC_F14);
                 set_window_mode();
             }
             return false;
         case MV_MAC:
             if (record->event.pressed) {
-                SEND_STRING(SS_TAP(X_F15));
+                tap_code(KC_F15);
                 set_mac_mode();
             }
             return false;
         case CST_DDM:
             if (record->event.pressed) {
-                SEND_STRING(SS_DOWN(X_LALT) SS_TAP(X_LEFT) SS_UP(X_LALT));
-                SEND_STRING(SS_DOWN(X_LSFT) SS_DOWN(X_LALT) SS_TAP(X_RIGHT) SS_UP(X_LALT) SS_UP(X_LSFT));
-                SEND_STRING(SS_TAP(X_BSPC));
+                // Alt + Left (이전 동작)
+                register_code(KC_LALT);
+                tap_code(KC_LEFT);
+                unregister_code(KC_LALT);
+
+                // Shift + Alt + Right (다음 동작)
+                register_code(KC_LSFT);
+                register_code(KC_LALT);
+                tap_code(KC_RIGHT);
+                unregister_code(KC_LALT);
+                unregister_code(KC_LSFT);
+
+                // Backspace
+                tap_code(KC_BSPC);
             }
             return false;
         case CST_DDW:
             if (record->event.pressed) {
-                SEND_STRING(SS_TAP(X_HOME));
-                SEND_STRING(SS_DOWN(X_LSFT) SS_TAP(X_END) SS_UP(X_LSFT));
-                SEND_STRING(SS_TAP(X_BSPC));
+                // Home 키 입력
+                tap_code(KC_HOME);
+
+                // Shift + End (텍스트 블록 선택)
+                register_code(KC_LSFT);
+                tap_code(KC_END);
+                unregister_code(KC_LSFT);
+
+                // Backspace (선택한 텍스트 삭제)
+                tap_code(KC_BSPC);
             }
             return false;
          case SPAM:  // When you press custom SPAM keycode
