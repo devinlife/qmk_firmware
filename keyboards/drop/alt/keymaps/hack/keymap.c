@@ -12,7 +12,7 @@
 uint32_t light_timer = 0;
 
 
-#define SPAM_DELAY 2000  // 500 milliseconds between spams
+#define SPAM_DELAY 60000 // 1 second between spams
 bool spam_active = false;
 uint32_t spam_timer = 0;
 
@@ -150,17 +150,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
-void matrix_scan_user(void){
+void check_spam_active(void){
   if (spam_active) {
     // Check if it's been SPAM_DELAY milliseconds since the last spam
     if (timer_elapsed32(spam_timer) > SPAM_DELAY) {
       tap_code(KC_COMMA);           // Send a comma
-      tap_code(KC_COMMA);           // Send a comma
-      tap_code(KC_BACKSPACE);           // Send a comma
-      tap_code(KC_BACKSPACE);           // Send a comma
       spam_timer = timer_read32();  // Reset spam timer
     }
   }
+
+  if (timer_elapsed(light_timer) > LIGHT_TIMEOUT) {
+    rgblight_disable();  // 라이트 끄기
+  }
+}
+
+void matrix_scan_user(void) {
+  check_spam_active();
 
   if (timer_elapsed(light_timer) > LIGHT_TIMEOUT) {
     rgblight_disable();  // 라이트 끄기
