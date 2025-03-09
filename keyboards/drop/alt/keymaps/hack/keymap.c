@@ -28,8 +28,8 @@ enum alt_keycodes {
 };
 
 enum os_layers {
-    WINDOWS_LAYER = 3,
-    MAC_LAYER = 0
+    WINDOWS_LAYER = 0,
+    MAC_LAYER = 3
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
