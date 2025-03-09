@@ -28,8 +28,8 @@ enum alt_keycodes {
 };
 
 enum os_layers {
-    MAC_LAYER = 0,
-    WINDOWS_LAYER = 3
+    WINDOWS_LAYER = 3,
+    MAC_LAYER = 0
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -93,7 +93,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
 
 void set_mac_mode(void) {
-    layer_move(WINDOWS_LAYER);
+    layer_move(MAC_LAYER);
     rgb_matrix_enable();
     rgb_matrix_sethsv(0, 255, 255); // set color to red
     light_active = true;
@@ -101,7 +101,7 @@ void set_mac_mode(void) {
 }
 
 void set_window_mode(void) {
-    layer_move(MAC_LAYER);
+    layer_move(WINDOWS_LAYER);
     rgb_matrix_enable();
     rgb_matrix_sethsv(170, 255, 255);  // set color to blue
     light_active = true;
