@@ -12,6 +12,15 @@ enum alt_keycodes {
     MV_MAC,              //CUSTOM: move mac machine
     CST_DDW,              //CUSTOM: delete a line in Windows
     CST_DDM,              //CUSTOM: delete a line in MacOS
+    APP1,              //CUSTOM:
+    APP2,              //CUSTOM:
+    APP3,              //CUSTOM:
+    APP4,              //CUSTOM:
+    APP5,              //CUSTOM:
+    APP6,              //CUSTOM:
+    APP7,              //CUSTOM:
+    APP8,              //CUSTOM:
+    APP9,              //CUSTOM:
     SPAM,              //CUSTOM: delete a line in MacOS
     U_T_AUTO,              // USB Extra Port Toggle Auto Detect / Always Active
     U_T_AGCR,              // USB Toggle Automatic GCR control
@@ -61,7 +70,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, _______,       _______,                                                  _______,                                 _______, _______, _______, KC_VOLD,       _______
     ),
     [5] = LAYOUT_65_ansi_blocker(
-        _______, LCTL(KC_F13), LCTL(KC_F14),     LCTL(KC_F15),     _______,            _______, LSA(KC_3), LSA(KC_4), _______, _______, _______, _______, _______, _______, _______,
+        _______, APP1,         APP2,             APP3,             APP4,               APP5,    APP6,      APP7,      APP8,    APP9,    _______, _______, _______, _______, _______,
         _______, _______,      _______,          _______,          LSFT(KC_F4),        _______, _______,   _______,   _______, _______, _______, _______, _______, _______, _______,
         KC_F14,  LSA(KC_E),    LSA(KC_F),        LCTL(LSFT(KC_G)), LGUI(LSFT(KC_F12)), _______, _______,   _______,   _______, _______, _______, _______,          _______, _______,
         _______, _______,      LCTL(LSFT(KC_B)), _______,          KC_F4,              _______, _______,   _______,   _______, _______, _______, _______,          L_BRI,   _______,
@@ -116,6 +125,45 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 SEND_STRING(SS_TAP(X_HOME));
                 SEND_STRING(SS_DOWN(X_LSFT) SS_TAP(X_END) SS_UP(X_LSFT));
                 SEND_STRING(SS_TAP(X_BSPC));
+            }
+            return false;
+        case APP1:
+        case APP2:
+        case APP3:
+        case APP4:
+        case APP5:
+        case APP6:
+        case APP7:
+        case APP8:
+        case APP9:
+            if (record->event.pressed) {
+                register_code(KC_LSFT);
+                register_code(KC_LCTL);
+                register_code(KC_LALT);
+                register_code(KC_LGUI);
+                if (keycode == APP1) {
+                    tap_code(KC_1);
+                } else if (keycode == APP2) {
+                    tap_code(KC_2);
+                } else if (keycode == APP3) {
+                    tap_code(KC_3);
+                } else if (keycode == APP4) {
+                    tap_code(KC_4);
+                } else if (keycode == APP5) {
+                    tap_code(KC_5);
+                } else if (keycode == APP6) {
+                    tap_code(KC_6);
+                } else if (keycode == APP7) {
+                    tap_code(KC_7);
+                } else if (keycode == APP8) {
+                    tap_code(KC_8);
+                } else if (keycode == APP9) {
+                    tap_code(KC_9);
+                }
+                unregister_code(KC_LGUI);
+                unregister_code(KC_LALT);
+                unregister_code(KC_LCTL);
+                unregister_code(KC_LSFT);
             }
             return false;
         case L_BRI:
