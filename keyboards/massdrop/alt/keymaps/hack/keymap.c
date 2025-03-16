@@ -1,6 +1,6 @@
 #include QMK_KEYBOARD_H
 
-#define SPAM_DELAY 2000  // 500 milliseconds between spams
+#define SPAM_DELAY 60000 // 1 second between spams
 bool spam_active = false;
 uint32_t spam_timer = 0;
 
@@ -191,15 +191,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
-void matrix_scan_user(void){
-  if (spam_active) {
+void check_and_send_spam(void){
     // Check if it's been SPAM_DELAY milliseconds since the last spam
     if (timer_elapsed32(spam_timer) > SPAM_DELAY) {
-      tap_code(KC_COMMA);           // Send a comma
-      tap_code(KC_COMMA);           // Send a comma
-      tap_code(KC_BACKSPACE);           // Send a comma
-      tap_code(KC_BACKSPACE);           // Send a comma
-      spam_timer = timer_read32();  // Reset spam timer
+        tap_code(KC_COMMA);           // Send a comma
+        spam_timer = timer_read32();  // Reset spam timer
     }
+}
+
+void matrix_scan_user(void) {
+  if (spam_active) {
+    check_and_send_spam();
+  }
+
+  if (light_active) {
+    disable_light_if_timeout();
   }
 }
+
