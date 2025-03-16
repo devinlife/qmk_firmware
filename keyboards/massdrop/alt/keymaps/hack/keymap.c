@@ -1,7 +1,7 @@
 #include QMK_KEYBOARD_H
 
 #define RGBLIGHT_ENABLE
-#define LIGHT_TIMEOUT 3000                     // Time in milliseconds before the light turns off
+#define LIGHT_TIMEOUT 1000                     // Time in milliseconds before the light turns off
 
 bool light_active  = false;
 uint32_t light_timer = 0;
@@ -13,10 +13,12 @@ uint32_t spam_timer = 0;
 uint32_t os_custom_code = 0;
 
 enum alt_keycodes {
-    MV_WIN = SAFE_RANGE, //CUSTOM: move window machine
-    MV_MAC,              //CUSTOM: move mac machine
-    CST_DDW,              //CUSTOM: delete a line in Windows
-    CST_DDM,              //CUSTOM: delete a line in MacOS
+    MV_WIN = SAFE_RANGE, // CUSTOM: move window machine
+    MV_MAC,              // CUSTOM: move mac machine
+    MO_WIN,                 // CUSTOM: layer on windows
+    MO_MAC,                 // CUSTOM: layer on mac
+    CST_DDW,             //CUSTOM: delete a line in Windows
+    CST_DDM,             //CUSTOM: delete a line in MacOS
     CHG_LANG,            // CUSTOM: change language
     APP1,              //CUSTOM:
     APP2,              //CUSTOM:
@@ -35,12 +37,14 @@ enum os_layers {
     MAC_LAYER = 3
 };
 
+void enable_light(enum os_layers os_layer);
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Windows Layout
     [0] = LAYOUT_65_ansi_blocker(
         KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,     KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
         KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,     KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
-        MO(1),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,  KC_QUOT,          KC_ENT,  _______,
+        MO_WIN,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,  KC_QUOT,          KC_ENT,  _______,
         KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,          KC_UP,   _______,
         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             CHG_LANG, MO(2),   KC_LEFT, KC_DOWN, KC_RGHT
     ),
@@ -62,7 +66,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [3] = LAYOUT_65_ansi_blocker(
         KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,     KC_MINS, KC_EQL,  KC_BSPC, KC_DEL,
         KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,     KC_LBRC, KC_RBRC, KC_BSLS, SPAM,
-        MO(4),   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,  KC_QUOT,          KC_ENT,  _______,
+        MO_MAC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,  KC_QUOT,          KC_ENT,  _______,
         KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,  KC_RSFT,          KC_UP,   _______,
         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             CHG_LANG, MO(5),   KC_LEFT, KC_DOWN, KC_RGHT
     ),
@@ -97,22 +101,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 void set_mac_mode(void) {
     layer_move(MAC_LAYER);
-    rgb_matrix_enable();
-    rgb_matrix_sethsv(0, 255, 255); // set color to red
+    enable_light(MAC_LAYER);
     light_active = true;
     light_timer = timer_read();
 }
 
 void set_window_mode(void) {
     layer_move(WINDOWS_LAYER);
-    rgb_matrix_enable();
-    rgb_matrix_sethsv(170, 255, 255);  // set color to blue
+    enable_light(WINDOWS_LAYER);
     light_active = true;
     light_timer = timer_read();
 }
 
 void keyboard_post_init_user(void) {
-    rgb_matrix_enable();
     rgb_matrix_mode_noeeprom(1); // 기본 단색 모드
     set_mac_mode();
 }
@@ -142,6 +143,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 set_mac_mode();
             }
             return false;
+         case MO_WIN:
+            if (record->event.pressed) {
+                layer_on(WINDOWS_LAYER + 1);
+                enable_light(WINDOWS_LAYER);
+            } else {
+                layer_off(WINDOWS_LAYER+1);
+                rgblight_disable();  // 라이트 끄기
+            }
+            return false;
+        case MO_MAC:
+            if (record->event.pressed) {
+                layer_on(MAC_LAYER+1);
+                enable_light(MAC_LAYER);
+            } else {
+                layer_off(MAC_LAYER+1);
+                rgblight_disable();  // 라이트 끄기
+            }
+            return false;
+
         case CST_DDM:
             if (record->event.pressed) {
                 // Alt + Left (이전 동작)
@@ -234,6 +254,15 @@ void check_and_send_spam(void){
     if (timer_elapsed32(spam_timer) > SPAM_DELAY) {
         tap_code(KC_COMMA);           // Send a comma
         spam_timer = timer_read32();  // Reset spam timer
+    }
+}
+
+void enable_light(enum os_layers os_layer) {
+    rgb_matrix_enable();
+    if (os_layer == WINDOWS_LAYER) {
+        rgb_matrix_sethsv(170, 255, 255);  // set color to blue
+    } else if (os_layer == MAC_LAYER) {
+        rgb_matrix_sethsv(0, 255, 255); // set color to red
     }
 }
 
