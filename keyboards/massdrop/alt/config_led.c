@@ -61,9 +61,9 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 
 #endif
 
-void keyboard_post_init_user(void) {
-  gcr_desired = LED_GCR_DEFAULT;
-}
+// void keyboard_post_init_user(void) {
+//     gcr_desired = LED_GCR_DEFAULT;
+// }
 
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     for (uint8_t i = led_min; i < led_max; i++) {
